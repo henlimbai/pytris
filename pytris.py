@@ -11,7 +11,7 @@ from pygame.locals import *
 #useful game dimensions
 COLS = 10;
 ROWS = 20;
-TILESIZE = 40
+TILESIZE = 30
 HEADER_SPACE = 40
 
 #a list representing our tilemap
@@ -147,7 +147,10 @@ def clean_filled_rows():
 pygame.init()
 
 #Create a new drawing surface
-DISPLAYSURF = pygame.display.set_mode((COLS*TILESIZE, HEADER_SPACE + ROWS*TILESIZE))
+DISPLAYSURF = pygame.display.set_mode (
+    (COLS*TILESIZE, HEADER_SPACE + ROWS*TILESIZE),
+    HWSURFACE | DOUBLEBUF
+)
 
 #add a font to our inventory
 INVFONT = pygame.font.Font('FreeSansBold.ttf', 18)
@@ -169,6 +172,9 @@ piece_wait = 0
 
 #initilizes the counter
 removed_rows = 0
+
+#initilizes the fast-falling option
+fast_falling = False
 
 #choose the first piece
 current_piece = pieces[random.randint(0,4)]
@@ -194,11 +200,19 @@ def try_move_down():
         #moves the piece down
         piece_position_row += 1
 
-#process the keys pressed
+def process_key_up(key):
+    "process a key release"
+    global fast_falling
+    #if the down arrow is released
+    if key == K_DOWN:
+        #the piece must stop fast-falling
+        fast_falling = False
+
+
 def process_key(key):
-    "process a key press"
+    "process a key down"
     global piece_position_row, piece_position_column
-    global current_piece
+    global current_piece, fast_falling
     #if the right arrow is pressed
     if key == K_RIGHT:
         #check if the piece will be out of the right border
@@ -249,8 +263,9 @@ def process_key(key):
             current_piece = rotated_piece
     #if the down arrow is pressed
     if key == K_DOWN:
-        #try to move down the piece
-        try_move_down()
+        #the piece must start fast-falling
+        fast_falling = True
+
 
 #loop (repeat) forever
 while True:
@@ -266,6 +281,15 @@ while True:
         elif event.type == KEYDOWN:
             #process the key
             process_key(event.key);
+        #if a key is released
+        elif event.type == KEYUP:
+            #process the key
+            process_key_up(event.key);
+
+    #if the piece is falling it moves down fast
+    if fast_falling:
+        #try to move down the piece
+        try_move_down()
 
     #create the string with the user points
     textObj = INVFONT.render(str(user_points), True, WHITE, BLACK)
@@ -328,6 +352,8 @@ while True:
     )
     #if the piece can not move down
     if flag:
+        #the piece stops fast-falling
+        fast_falling = False
         #the piece becomes part of the tilemap
         insert_piece_in_tilemap(
             current_piece, 
