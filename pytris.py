@@ -128,7 +128,7 @@ def remove_row(row):
 
 def clean_filled_rows():
     "removes the lines completely filled"
-    global tilemap, removed_rows
+    global tilemap, removed_rows, time_pause
     global user_points
     points = 100
     #loop through each row of the tilemap
